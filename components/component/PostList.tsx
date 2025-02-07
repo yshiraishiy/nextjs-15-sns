@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { HeartIcon, MessageCircleIcon, Share2Icon, ClockIcon } from "./Icons";
 import prisma from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
+import { fetchPosts } from "@/lib/postDataFetcher";
 
 export default async function PostList() {
   // const posts = [
@@ -27,37 +28,13 @@ export default async function PostList() {
   //   },
   // ];
 
-  let posts = [];
-
   const { userId } = auth();
 
   if (!userId) {
     return;
   }
 
-  posts = await prisma.post.findMany({
-    where: {
-      authorId: {
-        in: [userId],
-      },
-    },
-    include: {
-      author: true,
-      likes: {
-        select: {
-          userId: true,
-        },
-      },
-      _count: {
-        select: {
-          replies: true,
-        },
-      },
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
+  const posts = await fetchPosts(userId);
 
   // console.log(posts)
 
@@ -95,7 +72,7 @@ export default async function PostList() {
             </div>
             <div className="flex items-center gap-2 text-muted-foreground">
               <ClockIcon className="h-5 w-5" />
-              {/* <span>{post.timestamp}</span> */}
+              <span>{post.createdAt.toLocaleString()}</span>
             </div>
           </div>
           {/* {post.comments && (
