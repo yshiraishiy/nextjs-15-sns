@@ -1,6 +1,7 @@
 import { Webhook } from "svix";
 import { headers } from "next/headers";
 import { WebhookEvent } from "@clerk/nextjs/server";
+import prisma from "@/lib/prisma";
 
 export async function POST(req: Request) {
   const SIGNING_SECRET = process.env.SIGNING_SECRET;
@@ -51,7 +52,45 @@ export async function POST(req: Request) {
   // For this guide, log payload to console
   const { id } = evt.data;
   const eventType = evt.type;
-  console.log(`Received webhook with ID ${id} and event type of ${eventType}`);
+
+  if (eventType === "user.created") {
+    try {
+      await prisma.user.create({
+        data: {
+          id: evt.data.id,
+          name: `${JSON.parse(body).data.first_name} ${
+            JSON.parse(body).data.last_name
+          }`,
+          image: JSON.parse(body).data.image_url,
+        },
+      });
+      return new Response("ユーザーの作成に成功しました。", { status: 200 });
+    } catch (err) {
+      console.log(err);
+      return new Response("ユーザーの作成に失敗しました。", { status: 500 });
+    }
+  }
+
+  if (eventType === "user.updated") {
+    try {
+      await prisma.user.update({
+        where: {
+          id: evt.data.id,
+        },
+        data: {
+          name: `${JSON.parse(body).data.first_name} ${
+            JSON.parse(body).data.last_name
+          }`,
+          image: JSON.parse(body).data.image_url,
+        },
+      });
+      return new Response("ユーザーの更新に成功しました。", { status: 200 });
+    } catch (err) {
+      console.log(err);
+      return new Response("ユーザーの更新に失敗しました。", { status: 500 });
+    }
+  }
+
   console.log("Webhook payload:", body);
 
   return new Response("Webhook received", { status: 200 });
