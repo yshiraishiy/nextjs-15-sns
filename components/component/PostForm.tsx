@@ -10,22 +10,33 @@ import { z } from "zod";
 import { useRef, useState } from "react";
 import { addPostAction } from "@/lib/actions";
 import { SubmitButton } from "./SubmitButton";
+import { useFormState } from "react-dom";
 
 export default function PostForm() {
-  const [error, setError] = useState<string | undefined>("");
+  const initialState = {
+    error: undefined,
+    success: false,
+  };
+  // const [error, setError] = useState<string | undefined>("");
   const formRef = useRef<HTMLFormElement>(null);
 
-  const handleSubmit = async (formData: FormData) => {
-    const result = await addPostAction(formData);
-    if (!result?.success) {
-      setError(result?.error);
-    } else {
-      setError("");
-      if (formRef.current) {
-        formRef.current.reset();
-      }
-    }
-  };
+  const [state, formAction] = useFormState(addPostAction, initialState);
+
+  // const handleSubmit = async (formData: FormData) => {
+  //   const result = await addPostAction(formData);
+  //   if (!result?.success) {
+  //     setError(result?.error);
+  //   } else {
+  //     setError("");
+  //     if (formRef.current) {
+  //       formRef.current.reset();
+  //     }
+  //   }
+  // };
+
+  if (state.success && formRef.current) {
+    formRef.current.reset();
+  }
 
   return (
     <div>
@@ -36,7 +47,7 @@ export default function PostForm() {
         </Avatar>
         <form
           ref={formRef}
-          action={handleSubmit}
+          action={formAction}
           className="flex items-center flex-1"
         >
           <Input
@@ -49,7 +60,9 @@ export default function PostForm() {
         </form>
       </div>
 
-      {error && <p className="text-destructive mt-1 ml-14">{error}</p>}
+      {state.error && (
+        <p className="text-destructive mt-1 ml-14">{state.error}</p>
+      )}
     </div>
   );
 }

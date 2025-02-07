@@ -5,12 +5,23 @@ import { z } from "zod";
 import prisma from "./prisma";
 import { error } from "console";
 
-export async function addPostAction(formData: FormData) {
+type State = {
+  error?: string | undefined;
+  success: boolean;
+};
+
+export async function addPostAction(
+  prevState: State,
+  formData: FormData
+): Promise<State> {
   try {
     const { userId } = auth();
 
     if (!userId) {
-      return;
+      return {
+        error: "ユーザーが存在しません。",
+        success: false,
+      };
     }
     const postText = formData.get("post") as string;
     const postTextSchema = z
