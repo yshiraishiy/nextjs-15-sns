@@ -60,7 +60,7 @@ export async function POST(req: Request) {
           id: evt.data.id,
           name: `${JSON.parse(body).data.first_name} ${
             JSON.parse(body).data.last_name
-          }`,
+          }`.trim(),
           image: JSON.parse(body).data.image_url,
         },
       });
@@ -80,7 +80,7 @@ export async function POST(req: Request) {
         data: {
           name: `${JSON.parse(body).data.first_name} ${
             JSON.parse(body).data.last_name
-          }`,
+          }`.trim(),
           image: JSON.parse(body).data.image_url,
         },
       });
