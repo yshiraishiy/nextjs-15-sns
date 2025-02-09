@@ -1,8 +1,10 @@
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ClockIcon } from "./Icons";
 import { PostInteraction } from "./PostInteraction";
+import { auth } from "@clerk/nextjs/server";
 
 export const Post = ({ post }: any) => {
+  const { userId } = auth();
   return (
     <div
       key={post.id}
@@ -10,7 +12,7 @@ export const Post = ({ post }: any) => {
     >
       <div className="flex items-center gap-4 mb-4">
         <Avatar className="w-10 h-10">
-          <AvatarImage src="/placeholder-user.jpg" />
+          <AvatarImage src={post.author.image} />
           <AvatarFallback>AC</AvatarFallback>
         </Avatar>
         <div>
@@ -27,6 +29,7 @@ export const Post = ({ post }: any) => {
             postId={post.id}
             initialLikes={post.likes.map((like: any) => like.userId)}
             commentNumber={post._count.replies}
+            userId={userId}
           />
         </div>
         <div className="flex items-center gap-2 text-muted-foreground">

@@ -1,69 +1,83 @@
-import React from "react";
+"use client";
+
+import React, { FormEvent, useOptimistic, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { HeartIcon, MessageCircleIcon, Share2Icon } from "./Icons";
-import prisma from "@/lib/prisma";
-import { auth } from "@clerk/nextjs/server";
-import { revalidatePath } from "next/cache";
+import { likeAction } from "@/lib/actions";
+
+interface LikeState {
+  likeCount: number;
+  isLiked: boolean;
+}
 
 type PostInteractionProps = {
   postId: string;
   initialLikes: string[];
   commentNumber: number;
+  userId: string | null;
 };
 
 export const PostInteraction = ({
   postId,
   initialLikes,
   commentNumber,
+  userId,
 }: PostInteractionProps) => {
-  const likeAction = async () => {
-    "use server";
+  const initialState = {
+    likeCount: initialLikes.length,
+    isLiked: userId ? initialLikes.includes(userId) : false,
+  };
 
-    const { userId } = auth();
+  // const [likeState, setLikeState] = useState({
+  //   likeCount: initialLikes.length,
+  //   isLiked: userId ? initialLikes.includes(userId) : false,
+  // });
 
-    if (!userId) {
-      throw new Error("User is not authenticated");
-    }
+  const [optimisticLike, addOptimisticLike] = useOptimistic<LikeState, void>(
+    initialState,
+    (currentState) => ({
+      likeCount: currentState.isLiked
+        ? currentState.likeCount - 1
+        : currentState.likeCount + 1,
+      isLiked: !currentState.isLiked,
+    })
+  );
 
+  const handleLikeSubmit = async () => {
     try {
-      const existingLike = await prisma.like.findFirst({
-        where: {
-          postId,
-          userId,
-        },
-      });
-
-      if (existingLike) {
-        await prisma.like.delete({
-          where: {
-            id: existingLike.id,
-          },
-        });
-
-        revalidatePath("/");
-      } else {
-        await prisma.like.create({
-          data: {
-            postId,
-            userId,
-          },
-        });
-      }
-
-      revalidatePath("/");
+      addOptimisticLike();
+      // setLikeState((prev) => ({
+      //   likeCount: prev.isLiked ? prev.likeCount - 1 : prev.likeCount + 1,
+      //   isLiked: !prev.isLiked,
+      // }));
+      await likeAction(postId);
     } catch (err) {
+      // setLikeState((prev) => ({
+      //   likeCount: prev.isLiked ? prev.likeCount + 1 : prev.likeCount - 1,
+      //   isLiked: !prev.isLiked,
+      // }));
       console.log(err);
     }
   };
 
   return (
     <div className="flex items-center">
-      <form action={likeAction}>
+      <form action={handleLikeSubmit}>
         <Button variant="ghost" size="icon">
-          <HeartIcon className="h-5 w-5 text-muted-foreground" />
+          <HeartIcon
+            className={`h-5 w-5 text-muted-foreground ${
+              optimisticLike.isLiked
+                ? "text-destructive text-red-500 fill-current"
+                : "text-muted-foreground"
+            }`}
+          />
         </Button>
       </form>
-      <span className="ml-1">{initialLikes.length}</span>
+      <span
+        className={`ml-1 ${optimisticLike.isLiked ? "text-destructive" : ""}`}
+      >
+        {optimisticLike.likeCount}
+      </span>
       <Button variant="ghost" size="icon">
         <MessageCircleIcon className="h-5 w-5 text-muted-foreground" />
       </Button>
