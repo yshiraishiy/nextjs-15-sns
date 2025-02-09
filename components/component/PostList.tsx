@@ -5,7 +5,7 @@ import { auth } from "@clerk/nextjs/server";
 import { fetchPosts } from "@/lib/postDataFetcher";
 import { Post } from "./Post";
 
-export default async function PostList() {
+export default async function PostList({username}: {username: string}) {
   // const posts = [
   //   {
   //     id: 1,
@@ -33,7 +33,7 @@ export default async function PostList() {
     return;
   }
 
-  const posts = await fetchPosts(userId);
+  const posts = await fetchPosts(userId, username);
 
   // console.log(posts)
 

@@ -1,3 +1,4 @@
+import PostList from "@/components/component/PostList";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import prisma from "@/lib/prisma";
@@ -79,7 +80,7 @@ export default async function ProfilePage({
               </div>
 
               <div className="mt-6 h-[500px] overflow-y-auto">
-                Time Line Here
+                <PostList username={decodedUsername} />
               </div>
             </div>
             <div className="sticky top-14 self-start space-y-6">
