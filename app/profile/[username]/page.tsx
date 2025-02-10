@@ -33,7 +33,7 @@ export default async function ProfilePage({
       },
       following: {
         where: {
-          followingId: currentUserId,
+          followerId: currentUserId,
         },
       },
     },
@@ -42,8 +42,6 @@ export default async function ProfilePage({
   if (!user) {
     notFound();
   }
-
-  console.log(user.following.length);
 
   const isCurrentUser = currentUserId === user.id;
   const isFollowing = user.following.length > 0;
@@ -104,6 +102,7 @@ export default async function ProfilePage({
             <div className="sticky top-14 self-start space-y-6">
               <FollowButton
                 isCurrentUser={isCurrentUser}
+                userId={user.id}
                 isFollowing={isFollowing}
               />
               <div>
