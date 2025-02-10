@@ -1,4 +1,6 @@
-import React from "react";
+"use client";
+
+import React, { useOptimistic } from "react";
 import { Button } from "../ui/button";
 import { followAction } from "@/lib/actions";
 
@@ -13,14 +15,26 @@ export const FollowButton = ({
   isFollowing,
   userId,
 }: FollowButtonProps) => {
+  const [optimisticFollow, addOptimisticFollow] = useOptimistic<
+    { isFollowing: boolean },
+    void
+  >(
+    {
+      isFollowing,
+    },
+    (currentState) => ({
+      isFollowing: !currentState.isFollowing,
+    })
+  );
+
   const getButtonCurrent = () => {
     if (isCurrentUser) {
       return "プロフィール編集";
     }
 
-    console.log(isFollowing)
+    console.log(isFollowing);
 
-    if (isFollowing) {
+    if (optimisticFollow.isFollowing) {
       return "フォロー中";
     }
 
@@ -28,7 +42,7 @@ export const FollowButton = ({
   };
 
   const getButtonVariant = () => {
-    if (isCurrentUser) {
+    if (optimisticFollow.isFollowing) {
       return "secondary";
     }
 
@@ -38,9 +52,21 @@ export const FollowButton = ({
 
     return "default";
   };
+  const handleFollowAction = async () => {
+    if (isCurrentUser) {
+      return;
+    }
+
+    try {
+      addOptimisticFollow();
+      await followAction(userId);
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   return (
-    <form action={followAction.bind(null, userId)}>
+    <form action={handleFollowAction}>
       <Button variant={getButtonVariant()} className="w-full">
         {getButtonCurrent()}
       </Button>
